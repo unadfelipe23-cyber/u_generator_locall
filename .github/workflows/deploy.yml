@@ -1,32 +1,18 @@
 name: CI
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+on: [push]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    
     defaults:
       run:
-        working-directory: ./u_generador_Spck
-
+        working-directory:./u_generador_Spck
     steps:
-      - name: Checkout del código
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js 24
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: 'npm'
-          cache-dependency-path: 'u_generador_Spck/package-lock.json'
 
-      - name: Instalar dependencias
-        run: npm ci
-
-      - name: Build
-        run: npm run build
+      - run: npm install
+      - run: npm run build
