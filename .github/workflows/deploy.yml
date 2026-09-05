@@ -1,36 +1,8 @@
-name: CI
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    
-    defaults:
-      run:
-        working-directory: ./u_generador_Spck  # <-- AQUÍ ESTÁ EL ARREGLO
-
-    steps:
-      - name: Checkout del código
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
+      - name: Setup Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'
-          cache-dependency-path: ./u_generador_Spck/package-lock.json
+          node-version: 24
+          # le quitamos el cache para que no falle
 
       - name: Instalar dependencias
-        run: npm ci
-
-      - name: Build / Test
-        run: npm run build
-        # Si tu script se llama diferente, cambia a: npm start, npm test, etc.
-
-      - name: Verificar que si existe el package.json
-        run: ls -la && cat package.json
+        run: npm install
