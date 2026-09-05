@@ -1,0 +1,24 @@
+name: Generar package-lock
+on: workflow_dispatch
+
+jobs:
+  generar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Generar lock
+        working-directory: ./u_generador_Spck
+        run: npm install --package-lock-only
+
+      - name: Subirlo al repo
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add u_generador_Spck/package-lock.json
+          git commit -m "generar package-lock.json para cache" || echo "nada que hacer"
+          git push
