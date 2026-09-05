@@ -8,6 +8,9 @@ jobs:
   build-and-verify:
     name: Build, run and verify
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
 
     steps:
       - name: Checkout repository
@@ -35,13 +38,15 @@ jobs:
       - name: Verify generated documents
         run: |
           set -euo pipefail
-          DOCS=$(find . -maxdepth 1 -type f \( -iname '*.docx' -o -iname '*.xlsx' -o -iname '*.pdf' -o -iname '*.pptx' \))
-          
+          # Buscar recursivamente tipos de documentos comunes; excluir node_modules, .git y .github
+          DOCS=$(find . -type f \( -iname '*.docx' -o -iname '*.xlsx' -o -iname '*.pdf' -o -iname '*.pptx' \) \
+            -not -path './node_modules/*' -not -path './.git/*' -not -path './.github/*' -print)
+
           if [ -z "$DOCS" ]; then
-            echo "ERROR: No documents generated in root directory" >&2
+            echo "ERROR: No documents generated in the repository" >&2
             exit 1
           fi
-          
+
           echo "✓ Generated documents:"
           echo "$DOCS"
 
@@ -51,8 +56,8 @@ jobs:
         with:
           name: generated-docs
           path: |
-            *.docx
-            *.xlsx
-            *.pdf
-            *.pptx
+            **/*.docx
+            **/*.xlsx
+            **/*.pdf
+            **/*.pptx
           if-no-files-found: warn
