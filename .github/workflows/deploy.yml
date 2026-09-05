@@ -24,32 +24,35 @@ jobs:
         run: |
           set -euo pipefail
           if [ -f package-lock.json ]; then
-            echo "package-lock.json found — using npm ci"
             npm ci
           else
-            echo "package-lock.json not found — using npm install"
             npm install --no-audit --no-fund
           fi
 
-      - name: Run document generator and verify outputs
+      - name: Run document generator
+        run: node index.js
+
+      - name: Verify generated documents
         run: |
           set -euo pipefail
-          echo "Running document generator (node index.js)..."
-          node index.js
-
-          echo "Checking for generated documents (.docx, .xlsx, .pdf, .pptx)..."
-          if ! find . -type f \( -iname '*.docx' -o -iname '*.xlsx' -o -iname '*.pdf' -o -iname '*.pptx' \) -not -path './node_modules/*' -print -quit > /dev/null; then
-            echo "ERROR: No generated document files found. Ensure index.js writes .docx/.xlsx/.pdf/.pptx files to the repository or an output directory." >&2
+          DOCS=$(find . -maxdepth 1 -type f \( -iname '*.docx' -o -iname '*.xlsx' -o -iname '*.pdf' -o -iname '*.pptx' \))
+          
+          if [ -z "$DOCS" ]; then
+            echo "ERROR: No documents generated in root directory" >&2
             exit 1
           fi
+          
+          echo "✓ Generated documents:"
+          echo "$DOCS"
 
-      - name: Upload generated documents as artifact
+      - name: Upload generated documents
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: generated-docs
           path: |
-            **/*.docx
-            **/*.xlsx
-            **/*.pdf
-            **/*.pptx
+            *.docx
+            *.xlsx
+            *.pdf
+            *.pptx
           if-no-files-found: warn
