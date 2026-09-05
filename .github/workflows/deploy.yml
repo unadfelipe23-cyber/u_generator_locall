@@ -1,0 +1,55 @@
+name: Generate and verify documents
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-verify:
+    name: Build, run and verify
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          if [ -f package-lock.json ]; then
+            echo "package-lock.json found — using npm ci"
+            npm ci
+          else
+            echo "package-lock.json not found — using npm install"
+            npm install --no-audit --no-fund
+          fi
+
+      - name: Run document generator and verify outputs
+        run: |
+          set -euo pipefail
+          echo "Running document generator (node index.js)..."
+          node index.js
+
+          echo "Checking for generated documents (.docx, .xlsx, .pdf, .pptx)..."
+          if ! find . -type f \( -iname '*.docx' -o -iname '*.xlsx' -o -iname '*.pdf' -o -iname '*.pptx' \) -not -path './node_modules/*' -print -quit > /dev/null; then
+            echo "ERROR: No generated document files found. Ensure index.js writes .docx/.xlsx/.pdf/.pptx files to the repository or an output directory." >&2
+            exit 1
+          fi
+
+      - name: Upload generated documents as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-docs
+          path: |
+            **/*.docx
+            **/*.xlsx
+            **/*.pdf
+            **/*.pptx
+          if-no-files-found: warn
